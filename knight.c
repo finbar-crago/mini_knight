@@ -81,7 +81,7 @@ struct pos * peak(struct stack *s){
 struct pos {
   int move, x, y;
   struct pos **next[M];
-  struct pos *pos, *last;
+  struct pos *pos, *from;
 };
 
 struct game {
@@ -120,7 +120,7 @@ struct game * init_game(){
 
   g->start = g->board[START_X][START_Y];
   g->start->move = 0;
-  g->start->last = g->invalid;
+  g->start->from = g->invalid;
 
   g->work = init_stack(g->start->pos);
 
@@ -169,45 +169,54 @@ void print_board(struct game *game, struct stack *c, struct pos *pos){
 
 int main(int argc, char **argv){
   struct game  *game;
-  struct stack *c, *bt, *sol_n;
-  struct pos *pos;
+  struct stack *c, *sol_n;
+  struct pos *pos, *tmp;
 
   game = init_game();
 
-  c  = init_stack(game->start->pos);
-  bt = init_stack(game->start->pos);
+  c = init_stack(game->start->pos);
   sol_n = c;
 
   do {
-    int i, new;
+    int i, j, new;
     if(game->moves == game->win)
       break;
 
     printf("\n<%d> WRK:%d C:%d MOV:%d\n", game->win, game->work->size, c->size, game->moves);
 
     pos = pop(game->work);
-    push(bt, peak(game->work));
-
     pos->move = game->moves++;
+    game->board[pos->x][pos->y] = pos;
     push(c, pos);
 
     new = 0;
-
     for(i=0; i < M; i++){
       if( is_valid( game, *pos->next[i] )){
-        push( game->work, *pos->next[i] );
+
+        tmp = malloc(sizeof(struct pos));
+        tmp->move = -1;
+        tmp->x = (*pos->next[i])->x;
+        tmp->y = (*pos->next[i])->y;
+        for(j=0; j<M; j++)
+          tmp->next[j] = pos->next[j];
+        tmp->pos = game->board[tmp->x][tmp->y];
+        tmp->from = pos;
+        push(game->work, tmp);
+
         new++;
       }
     }
 
     if(!new){
       printf("\x1b[1;31mDEAD END!\x1b[0m\n");
+      tmp = peak(game->work);
       do {
         printf("\x1b[1;31mGO BACK...\x1b[0m\n");
         pos->move = -1;
+        pos->from = game->invalid;
         pop(c);
         game->moves--;
-      } while((pos = pop(bt), pos) != peak(game->work));
+      } while(pos->from != tmp->from && pos->from != game->invalid);
     }
 
     print_board(game, c, pos);
