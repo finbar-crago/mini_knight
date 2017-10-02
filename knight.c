@@ -79,7 +79,7 @@ struct pos * peak(struct stack *s){
 /* ---- game stuff ---- */
 
 struct pos {
-  int move, x, y;
+  int move, depth, x, y;
   struct pos **next[M];
   struct pos *pos, *last;
 };
@@ -169,13 +169,11 @@ void print_board(struct game *game, struct stack *c, struct pos *pos){
 
 int main(int argc, char **argv){
   struct game  *game;
-  struct stack *c, *bt, *sol_n;
-  struct pos *pos;
+  struct stack *c, *sol_n;
+  struct pos *pos, *tmp;
 
   game = init_game();
-
   c  = init_stack(game->start->pos);
-  bt = init_stack(game->start->pos);
   sol_n = c;
 
   do {
@@ -186,8 +184,6 @@ int main(int argc, char **argv){
     printf("\n<%d> WRK:%d C:%d MOV:%d\n", game->win, game->work->size, c->size, game->moves);
 
     pos = pop(game->work);
-    push(bt, peak(game->work));
-
     pos->move = game->moves++;
     push(c, pos);
 
@@ -195,6 +191,7 @@ int main(int argc, char **argv){
 
     for(i=0; i < M; i++){
       if( is_valid( game, *pos->next[i] )){
+        (*pos->next[i])->depth = game->moves + 1;
         push( game->work, *pos->next[i] );
         new++;
       }
@@ -202,19 +199,23 @@ int main(int argc, char **argv){
 
     if(!new){
       printf("\x1b[1;31mDEAD END!\x1b[0m\n");
+      tmp = peak(game->work);
       do {
         printf("\x1b[1;31mGO BACK...\x1b[0m\n");
+        printf("[%d, %d]\n", pos->depth, game->work->top->pos->depth);
+        pos = pop(c);
         pos->move = -1;
-        pop(c);
         game->moves--;
-      } while((pos = pop(bt), pos) != peak(game->work));
+      } while( pos->depth >= game->work->top->pos->depth -1 );
     }
 
     print_board(game, c, pos);
 
   } while(game->work->size);
 
-  printf("\nDONE!\n");
+  printf("\nDONE!\n\n");
+  print_board(game, c, pos);
+
 
   return 0;
 }
