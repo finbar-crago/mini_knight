@@ -1,6 +1,44 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define SIZE 8
+
+struct {int x,y;} MOVES[8] = {{ 1, 2}, { 2, 1}, { 2,-1}, { 1,-2},
+                              {-1,-2}, {-2,-1}, {-2, 1}, {-1, 2}};
+
+struct mov {
+	int d, wrk;
+};
+
+struct node {
+	struct mov *mov;
+	struct node *nxt;
+};
+
+struct mov board[SIZE][SIZE];
+struct mov *stack[SIZE*SIZE];
+
+int main(int argc, char **argv){
+	int depth = 0;
+	int s = 0;
+	stack[0]  = &board[0][0];
+	s++;
+	do {
+		struct mov *move;
+		int x, y;
+
+		move = &board[1][7];
+		y = ((unsigned long)move-(unsigned long)&board)/sizeof(board[0][0])%(sizeof(board[0])/sizeof(board[0][0]));
+		x = ((((unsigned long)move-(unsigned long)&board)/sizeof(board[0][0])-y))/(sizeof(board[0])/sizeof(board[0][0]));
+		printf("%d, %d\n", x, y);
+
+	} while(depth && depth < SIZE*SIZE);
+
+	return 0;
+}
+
+#if 0
+
 #define SIZE_X 8
 #define SIZE_Y 8
 
@@ -219,3 +257,5 @@ int main(int argc, char **argv){
 
   return 0;
 }
+
+#endif
