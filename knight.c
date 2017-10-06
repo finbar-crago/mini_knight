@@ -15,43 +15,39 @@ struct mov {
 };
 
 struct mov board[SIZE][SIZE];
-struct mov *stack[SIZE*SIZE*SIZE*SIZE*SIZE*SIZE*SIZE*SIZE];
+struct {struct mov *mov; struct mov *from;} stack[SIZE*SIZE*SIZE];
 
 int main(int argc, char **argv){
 	struct mov *move;
+
 	int sptr = 1;
-
-	stack[0] = &board[0][0];
-	stack[0]->from = &board[0][0];
-	stack[0]->n = 0;
-
-	stack[1] = &board[0][0];
-	stack[1]->from = &board[0][0];
-	stack[1]->n = 0;
+	stack[1].mov  = &board[0][0];
+	stack[1].from = &board[0][0];
+	stack[1].mov->n = 0;
 
 	printf("\x1b[2J");
 
 	do {
 		int i, x, y;
 
-		if(sptr)
-			move = stack[sptr--];
+		move = stack[sptr--].mov;
 
 		if(!move)
 			break;
 
-		move->n = move->from->n + 1;
+		move->n    = stack[sptr+1].from->n + 1;
+		move->from = stack[sptr+1].from;
 
 		y = GET_Y(board, move);
 		x = GET_X(board, move, y);
 
-		printf("\n>>> (%d, %d)<%p>\n", x, y, stack[sptr+1]->from );
+		printf("\n>>> (%d, %d) <%p>\n", x, y, stack[sptr+1].from );
 
 		for(i=0; i < 8; i++){
 			if( SAFE(i, x, y) && !board[x+M[i].x][y+M[i].y].n ){
 				sptr++;
-				stack[sptr] = &board[x+M[i].x][y+M[i].y];
-				stack[sptr]->from = move;
+				stack[sptr].mov  = &board[x+M[i].x][y+M[i].y];
+				stack[sptr].from = move;
 			}
 		}
 
@@ -70,24 +66,29 @@ int main(int argc, char **argv){
 		}
 		printf("\n");
 
-		if(stack[sptr+1] == move){
-			printf("^^^ %d -> %d\n", move->n, stack[sptr]->from->n);
-			do {
+		if(stack[sptr+1].mov == move){
+			printf("^^^ %d -> %d\n", move->n, stack[sptr+1].from->n);
+
+			while (move != stack[sptr].from) {
 				if(move == &board[0][0])
 					break;
-				move->n = 0;
-				move = move->from;
+
 				y = GET_Y(board, move);
 				x = GET_X(board, move, y);
-				printf("%p <- %p (%d, %d) \n", move, move->from, x, y);
-			} while (move->from->n && move->from != stack[sptr]->from);
+				printf("%p <- %p (%d, %d) - %d\n", move->from, stack[sptr].from, x, y, move->n);
+
+				move->n = 0;
+				move = move->from;
+
+			}
+
 		}
 
-		printf("STACK[%2d] %p\n", sptr+1, move);
-		for(i=0;i<=sptr;i++){
-			y = GET_Y(board, stack[sptr-i]);
-			x = GET_X(board, stack[sptr-i], y);
-			printf(" (%d, %d) -> %2d <%p>\n", x, y, stack[sptr-i]->from->n, stack[sptr-i]->from );
+		printf("STACK[%2d] %p\n", sptr, move);
+		for(i=0;i<sptr;i++){
+			y = GET_Y(board, stack[sptr-i].mov);
+			x = GET_X(board, stack[sptr-i].mov, y);
+			printf(" (%d, %d) -> %2d <%p>\n", x, y, stack[sptr-i].from->n, stack[sptr-i].from );
 		}
 
 	} while (sptr > 0 && move->n < (SIZE*SIZE));
