@@ -1,23 +1,19 @@
 #include <stdio.h>
-#include <stdlib.h>
 
 #ifndef SIZE
 #define SIZE 8
 #endif
 
-#define GET_COL(b,ptr)   (((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])%(sizeof(b[0])/sizeof(b[0][0])))
-#define GET_ROW(b,ptr,col) (((((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])-col))/(sizeof(b[0])/sizeof(b[0][0])))
-
-struct {int row,col;} M[8] = {{ 1, 2}, { 2, 1}, { 2,-1}, { 1,-2}, {-1,-2}, {-2,-1}, {-2, 1}, {-1, 2}};
-#define SAFE(n, row, col) ( (row+M[n].row>=0) && (row+M[n].row<SIZE) && (col+M[n].col>=0) && (col+M[n].col<SIZE) )
-
-struct mov {
-	int n;
-	struct mov *from;
-};
+struct mov { int n;	struct mov *from; };
 
 struct mov board[SIZE][SIZE];
 struct {struct mov *mov; struct mov *from;} stack[SIZE*SIZE*SIZE];
+
+struct {int row,col;} M[8] = {{ 1, 2}, { 2, 1}, { 2,-1}, { 1,-2}, {-1,-2}, {-2,-1}, {-2, 1}, {-1, 2}};
+
+#define SAFE(n, row, col) ( (row+M[n].row>=0) && (row+M[n].row<SIZE) && (col+M[n].col>=0) && (col+M[n].col<SIZE) )
+#define GET_COL(b,ptr) (((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])%(sizeof(b[0])/sizeof(b[0][0])))
+#define GET_ROW(b,ptr,col) (((((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])-col))/(sizeof(b[0])/sizeof(b[0][0])))
 
 int main(int argc, char **argv){
 	struct mov *move;
@@ -32,11 +28,8 @@ int main(int argc, char **argv){
 
 	do {
 		int i, row, col;
+
 		move = stack[sptr--].mov;
-
-		if(!move)
-			break;
-
 		move->n    = stack[sptr+1].from->n + 1;
 		move->from = stack[sptr+1].from;
 
@@ -50,8 +43,10 @@ int main(int argc, char **argv){
 				stack[sptr].from = move;
 			}
 		}
+
+		/* tree should be symmetrical so we can discard the first branch */
 		if(move == &board[0][0])
-			sptr--; /* rm first branch */
+			sptr--;
 
 		if(move->n > best){
 			best = move->n;
@@ -73,7 +68,7 @@ int main(int argc, char **argv){
 		}
 
 		if(stack[sptr+1].mov == move){
-			while (move != stack[sptr].from) {
+			while(move != stack[sptr].from){
 				if(move == &board[0][0])
 					break;
 
@@ -84,7 +79,6 @@ int main(int argc, char **argv){
 				move = move->from;
 			}
 		}
-
 	} while (best < (SIZE*SIZE) && sptr > 0);
 
 	return 0;
