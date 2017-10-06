@@ -1,3 +1,4 @@
 CC=clang
-CFLAGS=-ansi -pedantic -Wall -g
+SIZE ?= 8
+CFLAGS=-ansi -pedantic -Wall -g -DSIZE=$(SIZE)
 all: knight

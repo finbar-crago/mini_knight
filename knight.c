@@ -1,7 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#ifndef SIZE
 #define SIZE 8
+#endif
 
 #define GET_COL(b,ptr)   (((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])%(sizeof(b[0])/sizeof(b[0][0])))
 #define GET_ROW(b,ptr,col) (((((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])-col))/(sizeof(b[0])/sizeof(b[0][0])))
