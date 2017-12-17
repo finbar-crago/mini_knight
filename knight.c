@@ -16,10 +16,11 @@ struct {int row,col;} M[8] = {{ 1, 2}, { 2, 1}, { 2,-1}, { 1,-2}, {-1,-2}, {-2,-
 #define GET_COL(b,ptr) (((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])%(sizeof(b[0])/sizeof(b[0][0])))
 #define GET_ROW(b,ptr,col) (((((unsigned long)ptr-(unsigned long)&b)/sizeof(b[0][0])-col))/(sizeof(b[0])/sizeof(b[0][0])))
 
+
 static int mov_comp(const void *a, const void *b){
 	int i, row_a, col_a, row_b, col_b, mov_a, mov_b;
 
-	col_a = GET_COL(board, ((struct stack *)a)->mov );
+	col_a = GET_COL(board, ((struct stack *)a)->mov);
 	col_b = GET_COL(board, ((struct stack *)b)->mov);
 	row_a = GET_ROW(board, ((struct stack *)a)->mov, col_a);
 	row_b = GET_ROW(board, ((struct stack *)b)->mov, col_b);
@@ -37,6 +38,7 @@ static int mov_comp(const void *a, const void *b){
 
 	return (mov_a < mov_b);
 }
+
 
 int main(int argc, char **argv){
 	struct mov *move;
@@ -72,10 +74,6 @@ int main(int argc, char **argv){
 		/* reorder the new stack elements by lowest moves */
 		qsort(&stack[sptr-new+1], new, sizeof(struct stack), mov_comp);
 
-
-		/* tree should be symmetrical so we can discard the first branch? */
-		/* if(move == &board[0][0])	sptr--;	*/
-
 		if(move->n > best){
 			best = move->n;
 
@@ -95,18 +93,6 @@ int main(int argc, char **argv){
 			printf("\n");
 		}
 
-		if(stack[sptr+1].mov == move){
-			while(move != stack[sptr].from){
-				if(move == &board[0][0])
-					break;
-
-				col = GET_COL(board, move);
-				row = GET_ROW(board, move, col);
-
-				move->n = 0;
-				move = move->from;
-			}
-		}
 	} while (best < (SIZE*SIZE) && sptr > 0);
 
 	return 0;
